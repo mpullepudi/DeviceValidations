@@ -1,0 +1,76 @@
+using System;
+using System.DirectoryServices;
+using System.Security.Cryptography;
+using System.Text;
+
+class Program
+{
+    static void Main()
+    {
+        try
+        {
+            // Generate a random password
+            string newPassword = GenerateRandomPassword(16); // Change the password length as needed
+
+            // Set the password for the built-in local administrator account
+            SetLocalAdministratorPassword(newPassword);
+
+            // Disable all other admin accounts (except the built-in administrator)
+            DisableOtherAdminAccounts();
+            
+            Console.WriteLine("Password for local administrator account randomized and other admin accounts disabled.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    static void SetLocalAdministratorPassword(string newPassword)
+    {
+        using (DirectoryEntry entry = new DirectoryEntry("WinNT://./Administrator"))
+        {
+            entry.Invoke("SetPassword", newPassword);
+            entry.CommitChanges();
+        }
+    }
+
+    static void DisableOtherAdminAccounts()
+    {
+        using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://localhost"))
+        {
+            using (DirectoryEntry admGroup = localMachine.Children.Find("Administrators", "group"))
+            {
+                object members = admGroup.Invoke("Members", null);
+                foreach (object member in (IEnumerable)members)
+                {
+                    using (DirectoryEntry user = new DirectoryEntry(member))
+                    {
+                        if (user.SchemaClassName == "User" && user.Name != "Administrator")
+                        {
+                            // Disable the admin account
+                            user.Properties["AccountDisabled"].Value = true;
+                            user.CommitChanges();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    static string GenerateRandomPassword(int length)
+    {
+        const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder password = new StringBuilder();
+        using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+        {
+            byte[] randomBytes = new byte[length];
+            rng.GetBytes(randomBytes);
+            foreach (byte b in randomBytes)
+            {
+                password.Append(validChars[b % validChars.Length]);
+            }
+        }
+        return password.ToString();
+    }
+}
