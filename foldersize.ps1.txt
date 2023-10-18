@@ -1,0 +1,32 @@
+# Define the path to the folder you want to calculate the size of
+$folderPath = "C:\Your\Folder\Path"
+
+# Calculate the folder size
+$folderSize = (Get-ChildItem -Path $folderPath -Recurse | Measure-Object -Property Length -Sum).Sum
+
+# Convert the size to a human-readable format (e.g., MB or GB)
+if ($folderSize -gt 1GB) {
+    $folderSizeInGB = [math]::Round($folderSize / 1GB, 2)
+    $sizeString = "${folderSizeInGB} GB"
+} elseif ($folderSize -gt 1MB) {
+    $folderSizeInMB = [math]::Round($folderSize / 1MB, 2)
+    $sizeString = "${folderSizeInMB} MB"
+} else {
+    $folderSizeInKB = [math]::Round($folderSize / 1KB, 2)
+    $sizeString = "${folderSizeInKB} KB"
+}
+
+# Define the Registry path where you want to store the folder size
+$registryPath = "HKLM:\Software\YourCompany\YourApp"
+
+# Define the Registry entry name
+$registryEntryName = "FolderSize"
+
+# Write the folder size to the Registry
+New-ItemProperty -Path $registryPath -Name $registryEntryName -Value $sizeString -PropertyType String -Force
+
+# Output the folder size
+Write-Host "Folder Size: $sizeString"
+
+# You can also view the Registry entry to verify the data
+Get-ItemProperty -Path $registryPath -Name $registryEntryName
