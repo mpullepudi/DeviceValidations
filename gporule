@@ -1,0 +1,45 @@
+To create a Windows Defender outbound firewall rule that blocks domain users from initiating Remote Desktop Protocol (RDP) connections to non-domain PCs, you can use Windows Group Policy. Here's how you can set up this policy:
+
+Create a Security Group for Domain Users:
+
+First, you should create a security group in Active Directory to contain the domain users you want to restrict from RDP access to non-domain PCs.
+
+Open Active Directory Users and Computers.
+Navigate to your domain and right-click on an organizational unit (OU) or create a new one to store the security group.
+Choose "New" > "Group."
+Give the group a name, e.g., "NoRDPToNonDomain," and click "OK."
+Add Domain Users to the Security Group:
+
+Add the domain users you want to restrict from RDP access to non-domain PCs to the security group created in the previous step.
+Create a Group Policy Object (GPO):
+
+Open the Group Policy Management Console (GPMC) on a Windows server or administrative PC.
+Navigate to the organizational unit (OU) where the target domain users are located.
+Right-click on the OU, select "Create a GPO in this domain, and Link it here."
+Give the GPO a name, e.g., "Block RDP for Domain Users."
+Edit the Group Policy:
+
+Right-click on the newly created GPO and select "Edit."
+Configure Outbound Windows Defender Firewall Rule:
+
+Navigate to "Computer Configuration" > "Policies" > "Windows Settings" > "Security Settings" > "Windows Firewall with Advanced Security" > "Outbound Rules."
+
+Create a new outbound rule to block RDP. Right-click "Outbound Rules" and select "New Rule."
+
+Follow the New Outbound Rule Wizard:
+
+a. Choose "Custom" as the rule type and click "Next."
+b. Choose "This program path" and specify the path to the RDP executable. By default, it is located in C:\Windows\System32\svchost.exe. You may need to create separate rules for both svchost.exe and C:\Windows\System32\svchost.exe.
+c. Select "These users or groups" and specify the security group "NoRDPToNonDomain" that contains the domain users you want to block from RDP to non-domain PCs.
+d. Select "Block the connection" and click "Next."
+e. Leave all profiles (Domain, Private, Public) selected and click "Next."
+f. Give the rule a name and description, and click "Finish."
+
+Link the GPO to the OU:
+
+Close the Group Policy Editor.
+In the GPMC, ensure that the GPO is linked to the OU containing the domain users.
+Force Group Policy Update:
+
+On the domain-joined computers where the domain users are logged in, open a Command Prompt and run the command: gpupdate /force. This will ensure that the new policy is applied immediately.
+The GPO will block RDP access for the specified domain users when they attempt to connect to non-domain PCs. Make sure to test the policy in a controlled environment before deploying it in a production network.
