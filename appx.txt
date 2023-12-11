@@ -1,0 +1,39 @@
+using System;
+using System.Management.Automation;
+
+class Program
+{
+    static void Main()
+    {
+        // PowerShell command to get information about installed applications
+        string powerShellCommand = "Get-Process";
+
+        // Create a PowerShell instance
+        using (PowerShell PowerShellInstance = PowerShell.Create())
+        {
+            // Use AddScript to add the PowerShell command
+            PowerShellInstance.AddScript(powerShellCommand);
+
+            // Invoke execution on the pipeline (collecting output)
+            Collection<PSObject> PSOutput = PowerShellInstance.Invoke();
+
+            // Check for errors
+            if (PowerShellInstance.Streams.Error.Count > 0)
+            {
+                foreach (ErrorRecord error in PowerShellInstance.Streams.Error)
+                {
+                    Console.WriteLine("Error: " + error.Exception.Message);
+                }
+            }
+            else
+            {
+                // Process the output
+                foreach (PSObject outputItem in PSOutput)
+                {
+                    // Access properties of the output
+                    Console.WriteLine(outputItem.ToString());
+                }
+            }
+        }
+    }
+}
